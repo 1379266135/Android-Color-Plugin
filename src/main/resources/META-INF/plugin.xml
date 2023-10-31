@@ -8,19 +8,13 @@
     <name>ColorPlugin</name>
 
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
-    <vendor email="niubinbin2030@gmail.com" url="https://github.com/1379266135/Android-Color-Plugin">github</vendor>
+    <vendor email="niubinbin2030@gmail.com" url="https://github.com/1379266135/Android-Color-Plugin">MaYi</vendor>
 
     <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
          Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
     <description><![CDATA[
-    <h2>自动生成argb颜色值</h2>
-    <ul>
-        <li>支持输入rbg色值</li>
-        <li>支持输入透明度百分比</li>
-        <li>可预览效果</li>
-        <li>支持copy颜色值到系统剪切板</li>
-    </ul>
+        <br>It is a plugin that can automatically generate argb colors in Android Studio.</br>
   ]]></description>
 
     <!-- Product and plugin compatibility requirements.
@@ -35,7 +29,7 @@
     <actions>
         <action id="com.mayi.colorplugin.actions.NewTransparentColorAction"
                 class="com.mayi.colorplugin.actions.NewTransparentColorAction" text="New Transparent Color"
-                description="自动生成argb">
+                description="Automatically generate argb colors">
             <add-to-group group-id="ToolsMenu" anchor="last"/>
         </action>
     </actions>

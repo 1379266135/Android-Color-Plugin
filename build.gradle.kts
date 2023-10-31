@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.mayi"
-version = "1.0.0"
+version = "1.0.1"
 
 repositories {
     mavenCentral()
@@ -18,7 +18,6 @@ intellij {
     type.set("IC") // Target IDE Platform
 
     plugins.set(listOf(/* Plugin Dependencies */))
-    version = "2023.1"
     pluginName = "newTransparentColor"
 }
 
