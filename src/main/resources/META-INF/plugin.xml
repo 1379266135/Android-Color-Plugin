@@ -5,7 +5,7 @@
 
     <!-- Public plugin name should be written in Title Case.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
-    <name>ColorPlugin</name>
+    <name>New Transparent Color</name>
 
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
     <vendor email="niubinbin2030@gmail.com" url="https://github.com/1379266135/Android-Color-Plugin">MaYi</vendor>
