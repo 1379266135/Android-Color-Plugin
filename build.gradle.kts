@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.mayi"
-version = "1.0.2"
+version = "1.0.3"
 
 repositories {
     mavenCentral()
@@ -17,8 +17,17 @@ intellij {
     version.set("2022.2.5")
     type.set("IC") // Target IDE Platform
 
-    plugins.set(listOf(/* Plugin Dependencies */))
+    plugins.set(listOf("android"))
     pluginName = "newTransparentColor"
+}
+
+dependencies{
+    // https://mvnrepository.com/artifact/com.intellij/openapi
+//    implementation ("com.intellij:openapi:7.0.3")
+//    implementation ("com.intellij:ideaIC:2022.2.5")
+//    implementation ("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.21") // 请使用最新的 Kotlin 版本
+
+
 }
 
 tasks {

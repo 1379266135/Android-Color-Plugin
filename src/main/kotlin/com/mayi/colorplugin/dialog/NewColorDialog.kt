@@ -1,15 +1,16 @@
 package com.mayi.colorplugin.dialog
 
+import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.ui.DialogWrapper
 import javax.swing.JComponent
 
-class NewColorDialog() : DialogWrapper(true) {
+class NewColorDialog(e: AnActionEvent) : DialogWrapper(true) {
 
     //swing样式类，定义在4.3.2
-    private val formTestSwing = FormTestSwing()
+    private val formTestSwing = FormTestSwing(e)
 
     init {
-        title = "新增颜色值"
+        title = "New Transparent Color Value Resource"
         init()
     }
 

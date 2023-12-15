@@ -20,12 +20,23 @@
     <!-- Product and plugin compatibility requirements.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
     <depends>com.intellij.modules.platform</depends>
+    <depends>org.jetbrains.kotlin</depends>
+    <depends>com.intellij.modules.xml</depends>
+    <depends>org.jetbrains.android</depends>
+    <depends>com.intellij.modules.lang</depends>
+<!--    <depends>com.intellij.modules.androidstudio</depends>-->
 
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
 
     </extensions>
+
+    <!-- 扩展内容 -->
+    <extensions defaultExtensionNs="com.intellij">
+        <notificationGroup displayType="BALLOON" id="transparent.color"/>
+    </extensions>
+
     <actions>
         <action id="com.mayi.colorplugin.actions.NewTransparentColorAction"
                 class="com.mayi.colorplugin.actions.NewTransparentColorAction" text="New Transparent Color"
