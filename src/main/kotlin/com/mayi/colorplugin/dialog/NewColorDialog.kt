@@ -7,22 +7,22 @@ import javax.swing.JComponent
 class NewColorDialog(e: AnActionEvent) : DialogWrapper(true) {
 
     //swing样式类，定义在4.3.2
-    private val formTestSwing = FormTestSwing(e)
+    private val formNewColorSwing = FormNewColorSwing(e, this)
 
     init {
-        title = "New Transparent Color Value Resource"
+        title = "New ARGB Color Value Resource"
         init()
     }
 
     override fun createNorthPanel(): JComponent? {
-        return formTestSwing.initNorth()
+        return formNewColorSwing.initNorth()
     }
 
     override fun createCenterPanel(): JComponent? {
-        return formTestSwing.initCenter()
+        return formNewColorSwing.initCenter()
     }
 
     override fun createSouthPanel(): JComponent {
-        return formTestSwing.initSouth()
+        return formNewColorSwing.initSouth()
     }
 }

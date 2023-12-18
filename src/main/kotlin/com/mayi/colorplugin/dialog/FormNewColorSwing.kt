@@ -9,20 +9,20 @@ import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.vfs.LocalFileSystem
-import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.psi.PsiDocumentManager
+import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.PsiManager
-import com.intellij.psi.PsiParserFacade
 import com.intellij.psi.XmlElementFactory
 import com.intellij.psi.codeStyle.CodeStyleManager
 import com.intellij.psi.xml.XmlFile
 import com.mayi.colorplugin.toast.ToastMessage
-import org.jdesktop.swingx.VerticalLayout
 import org.jetbrains.android.facet.AndroidFacet
 import org.jetbrains.android.facet.ResourceFolderManager
-import java.awt.*
+import java.awt.Color
+import java.awt.GridLayout
+import java.awt.Toolkit
 import java.awt.datatransfer.Clipboard
 import java.awt.datatransfer.StringSelection
 import java.util.*
@@ -30,30 +30,19 @@ import javax.swing.*
 import javax.swing.border.Border
 
 
-class FormTestSwing(private var event: AnActionEvent) {
+class FormNewColorSwing(private var event: AnActionEvent, private var dialog: DialogWrapper?) {
     private var north: JPanel = JPanel()
     private var center: JPanel = JPanel()
     private var south: JPanel = JPanel()
 
     //为了让位于底部的按钮可以拿到组件内容，这里把表单组件做成类属性
-    private var r1: JLabel = JLabel("argb Value：")
-    private var r2: JLabel = JLabel("")
+    private var argbText: JLabel = JLabel("")
     private var btnCopy: JButton = JButton("Copy Color")
     private var previewBg: JPanel = JPanel()
-
-    private var colorName: JLabel = JLabel("Resource Name：")
     private var nameContent: JTextField = JTextField()
-
-    private var colorTitle: JLabel = JLabel("Resource RGB Value：")
     private var colorContent: JTextField = JTextField()
-
-    private var alphaTitle: JLabel = JLabel("Resource Alpha(%)：")
     private var alphaContent: JTextField = JTextField()
-
-    private var moduleSet: JLabel = JLabel("Module: ")
     private val moduleComBox: JComboBox<String> = JComboBox()
-
-    private var fileName: JLabel = JLabel("File Name: ")
     private val fileNameComBox: JComboBox<String> = JComboBox()
 
     private val moduleList = arrayListOf<Module>()
@@ -63,86 +52,62 @@ class FormTestSwing(private var event: AnActionEvent) {
     private var currentFile: VirtualFile? = null
 
     fun initNorth(): JPanel {
+        //定义表单的主体部分，放置到IDEA会话框的中央位置，垂直布局
+        north.setLayout(GridLayout(0, 5))
+        val blackLine: Border = BorderFactory.createLineBorder(Color.black)
+        north.setBorder(blackLine)
 
-        //定义表单的标题部分，放置到IDEA会话框的顶部位置
-        /*val title = JLabel("透明度转换")
-        title.setFont(Font("微软雅黑", Font.PLAIN, 26)) //字体样式
-        title.setHorizontalAlignment(SwingConstants.CENTER) //水平居中
-        title.setVerticalAlignment(SwingConstants.CENTER) //垂直居中
-        north.add(title)*/
+        // 生成的argb 十六进制
+        val argbLabel = JLabel(" argb value：")
+        north.add(argbLabel)
+        argbText.setForeground(Color.RED) //设置字体颜色
+        north.add(argbText)
+
+        // 预览
+        val bgTitle = JLabel("preview argb：")
+        north.add(bgTitle)
+        north.add(previewBg)
+
+        // 复制button
+        north.add(btnCopy)
+
+        btnCopy.addActionListener {
+            clickCopyButton()
+        }
 
         return north
     }
 
     fun initCenter(): JPanel {
-
-        // 设置默认宽高
-        center.preferredSize = Dimension(350, 150)
-
         //定义表单的主体部分，放置到IDEA会话框的中央位置，垂直布局
-        center.setLayout(VerticalLayout(10))
+        val gridLayout = GridLayout(5, 2)
+        center.setLayout(gridLayout)
 
-        //row1：预览转换结果
-        val rowTop = JPanel()
-        rowTop.setLayout(FlowLayout(FlowLayout.LEFT, 10, 5))
-        val blackline: Border = BorderFactory.createLineBorder(Color.black)
-        rowTop.setBorder(blackline);
+        val colorName = JLabel("Resource Name：")
+        center.add(colorName)
+        center.add(nameContent)
 
-        rowTop.add(r1)
-        r2.size = Dimension(40, 15)
-        r2.setForeground(Color(139, 181, 20)) //设置字体颜色
-        rowTop.add(r2)
+        val colorTitle = JLabel("Resource RGB Value：")
+        center.add(colorTitle)
+        center.add(colorContent)
 
-        val bgTitle = JLabel("预览效果：")
-        rowTop.add(bgTitle)
+        val alphaTitle = JLabel("Resource Alpha(%)：")
+        center.add(alphaTitle)
+        center.add(alphaContent)
 
-        previewBg.preferredSize = Dimension(40, 15)
-        rowTop.add(previewBg)
+        val moduleSet = JLabel("Module: ")
+        center.add(moduleSet)
+        center.add(moduleComBox)
 
-        rowTop.add(btnCopy)
-        btnCopy.addActionListener {
-            clickCopyButton()
-        }
-        center.add(rowTop)
+        val fileName = JLabel("File Name: ")
+        center.add(fileName)
+        center.add(fileNameComBox)
 
-        // color name
-        val rowName = JPanel()
-        rowName.setLayout(FlowLayout(FlowLayout.LEFT, 10, 5))
-        rowName.add(colorName)
-        rowName.add(nameContent)
-        center.add(rowName)
-
-        //row2：颜色值+文本框
-        val rowRGB = JPanel()
-        rowRGB.setLayout(FlowLayout(FlowLayout.LEFT, 10, 5))
-        rowRGB.add(colorTitle)
-        rowRGB.add(colorContent)
-        center.add(rowRGB)
-
-        //row3：透明度百分比+文本框
-        val rowAlpha = JPanel()
-        rowAlpha.setLayout(FlowLayout(FlowLayout.LEFT, 10, 5))
-        rowAlpha.add(alphaTitle)
-        rowAlpha.add(alphaContent)
-        center.add(rowAlpha)
-
-        // row 项目目录
-        val rowModule = JPanel()
-        rowModule.setLayout(FlowLayout(FlowLayout.LEFT, 10, 5))
-        rowModule.add(moduleSet)
-        rowModule.add(moduleComBox)
-        center.add(rowModule)
         moduleComBox.addActionListener {
             currentModule = moduleList[moduleComBox.selectedIndex]
             addColorFiles()
         }
 
-        // row 项目目录
-        val rowFile = JPanel()
-        rowFile.setLayout(FlowLayout(FlowLayout.LEFT, 10, 5))
-        rowFile.add(fileName)
-        rowFile.add(fileNameComBox)
-        center.add(rowFile)
         fileNameComBox.addActionListener {
             currentFile = fileNameList[fileNameComBox.selectedIndex]
         }
@@ -164,20 +129,7 @@ class FormTestSwing(private var event: AnActionEvent) {
             //获取到颜色值和透明度
             val color = getColorString()
 
-            if (color.length > 6) {
-                JOptionPane.showMessageDialog(null, "颜色值不能超过6位数", "错误提示", JOptionPane.ERROR_MESSAGE)
-                return@addActionListener
-            }
-
-            val regex = Regex("^[a-zA-Z0-9]+$")
-            if (!regex.matches(color)) {
-                JOptionPane.showMessageDialog(null, "颜色值只能是数字和字母组合", "错误提示", JOptionPane.ERROR_MESSAGE)
-                return@addActionListener
-            }
-
-            val alphaRegex = Regex("^\\d+$")
-            if (!alphaRegex.matches(alphaContent.getText())) {
-                JOptionPane.showMessageDialog(null, "透明度只能是数字", "错误提示", JOptionPane.ERROR_MESSAGE)
+            if (!checkData(color)) {
                 return@addActionListener
             }
 
@@ -187,14 +139,14 @@ class FormTestSwing(private var event: AnActionEvent) {
 
             // 预览色值字符串
             val colorStr = "#".plus(hex).plus(color)
-            r2.setText(colorStr)
+            argbText.setText(colorStr)
 
             // 预览色值效果
             val bgColor = Color(Integer.parseInt(color, 16))
             previewBg.setBackground(Color(bgColor.red, bgColor.green, bgColor.blue, alpha))
         }
 
-        val create = JButton("Generate Transparent Color")
+        val create = JButton("Create Color")
         create.setHorizontalAlignment(SwingConstants.CENTER); //水平居中
         create.setVerticalAlignment(SwingConstants.CENTER); //垂直居中
         south.add(create)
@@ -202,20 +154,7 @@ class FormTestSwing(private var event: AnActionEvent) {
             //获取到颜色值和透明度
             val color = getColorString()
 
-            if (color.length > 6) {
-                JOptionPane.showMessageDialog(null, "颜色值不能超过6位数", "错误提示", JOptionPane.ERROR_MESSAGE)
-                return@addActionListener
-            }
-
-            val regex = Regex("^[a-zA-Z0-9]+$")
-            if (!regex.matches(color)) {
-                JOptionPane.showMessageDialog(null, "颜色值只能是数字和字母组合", "错误提示", JOptionPane.ERROR_MESSAGE)
-                return@addActionListener
-            }
-
-            val alphaRegex = Regex("^\\d+$")
-            if (!alphaRegex.matches(alphaContent.getText())) {
-                JOptionPane.showMessageDialog(null, "透明度只能是数字", "错误提示", JOptionPane.ERROR_MESSAGE)
+            if (!checkData(color)) {
                 return@addActionListener
             }
 
@@ -240,9 +179,30 @@ class FormTestSwing(private var event: AnActionEvent) {
                     }
                 }
             }
-//            createColor(event, name, colorStr)
         }
         return south
+    }
+
+    // 校验数据是否符合标准
+    private fun checkData(color: String): Boolean {
+        if (color.length > 6) {
+            JOptionPane.showMessageDialog(null, "颜色值不能超过6位数", "错误提示", JOptionPane.ERROR_MESSAGE)
+            return false
+        }
+
+        val regex = Regex("^[a-zA-Z0-9]+$")
+        if (!regex.matches(color)) {
+            JOptionPane.showMessageDialog(null, "颜色值只能是数字和字母组合", "错误提示", JOptionPane.ERROR_MESSAGE)
+            return false
+        }
+
+        val alphaRegex = Regex("^\\d+$")
+        if (!alphaRegex.matches(alphaContent.getText())) {
+            JOptionPane.showMessageDialog(null, "透明度只能是数字", "错误提示", JOptionPane.ERROR_MESSAGE)
+            return false
+        }
+
+        return true
     }
 
     private fun isAndroidProject(project: Project?): Boolean {
@@ -296,40 +256,6 @@ class FormTestSwing(private var event: AnActionEvent) {
         }
     }
 
-    private fun createColor(event: AnActionEvent, colorName: String, colorValue: String) {
-        val project = event.project
-        val baseDir = project?.baseDir
-        val srcDir = VfsUtil.createDirectoryIfMissing(baseDir, "src")
-        val mainDir = VfsUtil.createDirectoryIfMissing(srcDir, "main")
-        val resDir = VfsUtil.createDirectoryIfMissing(mainDir, "res")
-        val valuesDir = VfsUtil.createDirectoryIfMissing(resDir, "values")
-        val colorsFile = valuesDir.findChild("color.xml")
-
-        ApplicationManager.getApplication().runWriteAction {
-            CommandProcessor.getInstance().executeCommand(project, {
-                if (project != null) {
-                    if (colorsFile != null) {
-                        addColorMap(colorsFile, project, colorName, colorValue)
-                    } else {
-                        val tempFile = createColorsFile(valuesDir, project, event)
-                        addColorMap(tempFile, project, colorName, colorValue)
-                    }
-                }
-            }, "create and add color", null)
-        }
-    }
-
-    private fun createColorsFile(parentDir: VirtualFile, project: Project, event: AnActionEvent): VirtualFile {
-        val file = parentDir.findOrCreateChildData(event, "color.xml")
-        val xmlContent = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                "<resources xmlns:tools=\"http://schemas.android.com/tools\">" +
-                "\n" +
-                "</resources>"
-        VfsUtil.saveText(file, xmlContent)
-        PsiDocumentManager.getInstance(project).commitAllDocuments()
-        return file
-    }
-
     private fun addColorMap(file: VirtualFile, project: Project, colorName: String, colorValue: String) {
         val psiFile = PsiManager.getInstance(project).findFile(file) as? XmlFile
         psiFile?.let { psi ->
@@ -338,17 +264,21 @@ class FormTestSwing(private var event: AnActionEvent) {
             try {
                 psi.rootTag?.addSubTag(xmlTag, false)
                 // 使用 VfsUtil 存储文本内容
-                VfsUtil.saveText(psi.virtualFile, psi.text)
+//                VfsUtil.saveText(psi.virtualFile, psi.text)
                 // 格式化 XML 文档
                 CodeStyleManager.getInstance(project).reformat(psi)
+                // 强制刷新文件
+                VirtualFileManager.getInstance().syncRefresh();
                 // 刷新项目
-                refreshProject(project)
+//                refreshProject(project)
             } catch (e: Exception) {
                 NotificationGroupManager.getInstance()
                         .getNotificationGroup("transparent.color")
                         .createNotification("提示信息", "Exception message: ${e.message}", NotificationType.INFORMATION)
                         .notify(project)
                 e.printStackTrace()
+            } finally {
+                dialog?.exitCode?.let { dialog?.close(it) }
             }
         }
     }
@@ -358,51 +288,6 @@ class FormTestSwing(private var event: AnActionEvent) {
         val baseDir: VirtualFile = project.baseDir
         LocalFileSystem.getInstance().refreshAndFindFileByIoFile(baseDir.toIoFile())
     }
-
-    /*private fun addColorResource(module: Module, colorName: String, colorValue: String) {
-
-        val facet = AndroidFacet.getInstance(module) ?: return
-        ToastMessage(center, "addColorResource 2")
-        WriteCommandAction.runWriteCommandAction(module.project) {
-            // 使用 ResourceFolderManager 获取 res 目录及其子目录
-            val resourceFolderManager = ResourceFolderManager.getInstance(facet)
-            ToastMessage(center, "addColorResource 3")
-            val resDirectories = resourceFolderManager.folders
-            ToastMessage(center, "addColorResource resDirectories：$resDirectories")
-            // 在所有的 res 目录中找到 values 目录
-            val valuesFolder = resDirectories
-                    .asSequence()
-                    .mapNotNull { it.findChild("values") }
-                    .firstOrNull()
-            ToastMessage(center, "addColorResource valuesFolder：$valuesFolder")
-            valuesFolder?.let {
-                // 获取或创建 colors.xml 文件
-                val colorsFile = it.findOrCreateChildData(module, "colors.xml")
-                ToastMessage(center, "addColorResource colorsFile：$colorsFile")
-                // 在 colors.xml 文件中添加颜色资源
-                val project = module.project
-                val psiFile = PsiManager.getInstance(project).findFile(colorsFile) as? XmlFile
-                ToastMessage(center, "addColorResource psiFile：$psiFile")
-                val psiFile = PsiFileFactory.getInstance(module.project).createFileFromText(
-                        "colors.xml",  // 文件名
-                        XmlFileType.INSTANCE,  // 文件类型
-                        "<resources><color name=\"$colorName\">$colorValue</color></resources>"  // 文件内容
-                ) as? XmlFile
-
-                psiFile?.let { psi ->
-                    val factory = XmlElementFactory.getInstance(module.project)
-                    val rootTag = psi.rootTag
-                    val xmlTag = factory.createTagFromText("<color name=\"$colorName\">$colorValue</color>")
-                    ToastMessage(center, "addColorResource rootTag：$rootTag")
-                    if (rootTag != null) {
-                        rootTag.addSubTag(xmlTag, false)
-                    } else {
-                        psi.add(factory.createTagFromText("<resources>${xmlTag.text}</resources>"))
-                    }
-                }
-            }
-        }
-    }*/
 
     private fun getColorName(): String {
         return nameContent.getText()
@@ -433,13 +318,14 @@ class FormTestSwing(private var event: AnActionEvent) {
     }
 
     private fun clickCopyButton() {
-        if (r2.text.isNullOrEmpty()) {
+        if (argbText.text.isNullOrEmpty()) {
             ToastMessage(center, "还未生成结果")
             return
         }
-        val stringSelection = StringSelection(r2.text)
+        val stringSelection = StringSelection(argbText.text)
         val clipboard: Clipboard = Toolkit.getDefaultToolkit().systemClipboard
         clipboard.setContents(stringSelection, null)
         ToastMessage(center, "复制成功")
+        dialog?.exitCode?.let { dialog?.close(it) }
     }
 }

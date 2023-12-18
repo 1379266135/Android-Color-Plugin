@@ -9,6 +9,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiParserFacade
@@ -24,7 +25,12 @@ class NewTransparentColorAction : AnAction() {
         dialog.isResizable = true
         dialog.show()
 
-//        createColor(e, "#201b1b1b")
+        /*ApplicationManager.getApplication().runWriteAction {
+            CommandProcessor.getInstance().executeCommand(e.project, {
+                createColor(e, "#201b1b1b")
+
+            }, "create colors file", null)
+        }*/
     }
 
     /*private fun createColor(event: AnActionEvent, colorValue: String) {
@@ -36,63 +42,49 @@ class NewTransparentColorAction : AnAction() {
         val valuesDir = VfsUtil.createDirectoryIfMissing(resDir, "values")
         val colorsFile = valuesDir.findChild("color.xml")
 
-        if (project != null){
+        if (project != null) {
             if (colorsFile != null) {
-                addColorMap(colorsFile, project, "syc_h", "#30fb537b")
+                addColorMap(colorsFile, project, "syc_h", "#30fb5777")
             } else {
                 createColorsFile(valuesDir, project, event)
             }
         }
-    }*/
+    }
 
-    /*private fun createColorsFile(parentDir: VirtualFile, project: Project, event: AnActionEvent) {
-        ApplicationManager.getApplication().runWriteAction {
-            CommandProcessor.getInstance().executeCommand(project, {
-                val file = parentDir.findOrCreateChildData(event, "color.xml")
-                val xmlContent = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                        "<resources xmlns:tools=\"http://schemas.android.com/tools\">" +
-                        "\n" +
-                        "</resources>"
-                VfsUtil.saveText(file, xmlContent)
-                PsiDocumentManager.getInstance(project).commitAllDocuments()
+    private fun createColorsFile(parentDir: VirtualFile, project: Project, event: AnActionEvent) {
+        val file = parentDir.findOrCreateChildData(event, "color.xml")
+        val xmlContent = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<resources xmlns:tools=\"http://schemas.android.com/tools\">" +
+                "\n" +
+                "</resources>"
+        VfsUtil.saveText(file, xmlContent)
+        PsiDocumentManager.getInstance(project).commitAllDocuments()
 
-            }, "create colors file", null)
+    }
+
+    private fun addColorMap(file: VirtualFile, project: Project, colorName: String, colorValue: String) {
+        val psiFile = PsiManager.getInstance(project).findFile(file) as? XmlFile
+        psiFile?.let { psi ->
+            val factory = XmlElementFactory.getInstance(project)
+            val xmlTag = factory.createTagFromText("    <color name=\"$colorName\">$colorValue</color>")
+            psi.rootTag?.addSubTag(xmlTag, false)
+
+            try {
+                // 使用 VfsUtil 存储文本内容
+//                        VfsUtil.saveText(psi.virtualFile, psi.text)
+                // 格式化 XML 文档
+                CodeStyleManager.getInstance(project).reformat(psi)
+                VirtualFileManager.getInstance().syncRefresh();
+                // 刷新项目
+//                        refreshProject(project)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
-    }*/
-
-    /*private fun addColorMap(file: VirtualFile, project: Project, colorName: String, colorValue: String) {
-        ApplicationManager.getApplication().runWriteAction {
-            CommandProcessor.getInstance().executeCommand(project, {
-                val psiFile = PsiManager.getInstance(project).findFile(file) as? XmlFile
-                val parserFacade = PsiParserFacade.getInstance(project)
-                psiFile?.let { psi ->
-                    val factory = XmlElementFactory.getInstance(project)
-                    val xmlTag = factory.createTagFromText("    <color name=\"$colorName\">$colorValue</color>")
-                    val tags = psi.rootTag?.subTags
-                    if (tags?.size!! > 0) {
-                        psi.rootTag?.add(parserFacade.createWhiteSpaceFromText("\n"))
-                        psi.rootTag?.addSubTag(xmlTag, false)
-                    } else {
-                        psi.rootTag?.addSubTag(xmlTag, false)
-                    }
-
-                    try {
-                        // 使用 VfsUtil 存储文本内容
-                        VfsUtil.saveText(psi.virtualFile, psi.text)
-                        // 格式化 XML 文档
-                        CodeStyleManager.getInstance(project).reformat(psi)
-                        // 刷新项目
-                        refreshProject(project)
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                }
-            }, "add color name and value", null)
-        }
-    }*/
+    }
 
     // 刷新项目
-    /*private fun refreshProject(project: Project) {
+    private fun refreshProject(project: Project) {
         val baseDir: VirtualFile = project.baseDir
         LocalFileSystem.getInstance().refreshAndFindFileByIoFile(baseDir.toIoFile())
     }*/
