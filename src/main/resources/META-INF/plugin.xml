@@ -15,6 +15,12 @@
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
     <description><![CDATA[
         <br>It is a plugin that can automatically generate argb colors in Android Studio.</br>
+        <ul>
+            <li>Generate ARGB color values automatically.</li>
+            <li>Preview the effects in real-time.</li>
+            <li>Support copying color values to the system clipboard.</li>
+            <li>Support automatically writing into the specified project's res directory in the ***.xml file.</li>
+        </ul>
   ]]></description>
 
     <!-- Product and plugin compatibility requirements.
